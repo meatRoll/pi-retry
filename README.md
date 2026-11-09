@@ -4,7 +4,7 @@
 
 ```
 /retry          # 重发上一轮请求
-alt+r           # 同上
+ctrl+shift+r    # 同上
 ```
 
 ## 会不会多出内容
@@ -44,13 +44,17 @@ retried request == expected context: True
 
 ```bash
 # 永久安装（写进 ~/.pi/agent/settings.json）
-pi install git:github.com/meatRoll/pi-retry@v1.0.0
+pi install git:github.com/meatRoll/pi-retry@v1.0.1
 
 # 或者只在这次启动加载
-pi -e git:github.com/meatRoll/pi-retry@v1.0.0
+pi -e git:github.com/meatRoll/pi-retry@v1.0.1
 ```
 
-装好后 `/hotkeys` 里能看到 `alt+r`。
+装好后 `/hotkeys` 的 Extensions 表里能看到 `ctrl+shift+r`。
+
+快捷键需要终端能把 `ctrl+shift+r` 和 `ctrl+r` 区分开（Kitty 键盘协议
+`ESC[114;6u`，或 xterm modifyOtherKeys `ESC[27;6;114~`）。Ghostty / kitty /
+WezTerm / iTerm2 可以；Terminal.app 发不出这个组合，那里用 `/retry`。
 
 ## 行为细节
 

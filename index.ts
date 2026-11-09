@@ -126,7 +126,7 @@ export async function retry(pi: ExtensionAPI, ctx: RetryContext, args: string): 
 	const words = args.trim().toLowerCase().split(/\s+/).filter(Boolean);
 
 	if (words.some((word) => word === "help" || word === "--help" || word === "-h")) {
-		ctx.ui.notify("pi-retry: /retry sends the last request again (alt+r does the same)", "info");
+		ctx.ui.notify("pi-retry: /retry sends the last request again (ctrl+shift+r does the same)", "info");
 		return;
 	}
 
@@ -203,7 +203,7 @@ export default function piRetry(pi: ExtensionAPI) {
 	});
 
 	// One keystroke for the common case.
-	pi.registerShortcut("alt+r", {
+	pi.registerShortcut("ctrl+shift+r", {
 		description: "Retry the last request",
 		handler: async (ctx) => {
 			await retry(pi, ctx, "");

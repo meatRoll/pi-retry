@@ -25,6 +25,7 @@ env["PI_RETRY_PAYLOAD_LOG"] = "/tmp/pi-retry-payload.jsonl"
 
 cmd = [
     "pi",
+    "-ne",
     "--mode",
     "rpc",
     "--no-session",

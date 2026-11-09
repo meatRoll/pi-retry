@@ -38,6 +38,7 @@ env = dict(os.environ, PI_RETRY_LOG=str(CONTEXT_LOG), PI_RETRY_PAYLOAD_LOG=str(P
 proc = subprocess.Popen(
     [
         "pi",
+        "-ne",
         "--mode",
         "rpc",
         "--session",
