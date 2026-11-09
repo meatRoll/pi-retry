@@ -1,0 +1,43 @@
+{
+  "name": "pi-retry",
+  "version": "1.0.0",
+  "description": "Re-send an interrupted Pi request with /retry instead of typing 继续 (nothing is added to the request)",
+  "type": "module",
+  "license": "MIT",
+  "author": "meatRoll",
+  "homepage": "https://github.com/meatRoll/pi-retry#readme",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/meatRoll/pi-retry.git"
+  },
+  "bugs": {
+    "url": "https://github.com/meatRoll/pi-retry/issues"
+  },
+  "keywords": [
+    "pi-package",
+    "pi-extension",
+    "pi",
+    "retry",
+    "interrupt"
+  ],
+  "files": [
+    "index.ts",
+    "README.md"
+  ],
+  "pi": {
+    "extensions": [
+      "./index.ts"
+    ]
+  },
+  "peerDependencies": {
+    "@earendil-works/pi-agent-core": "*",
+    "@earendil-works/pi-ai": "*",
+    "@earendil-works/pi-coding-agent": "*"
+  },
+  "devDependencies": {
+    "@earendil-works/pi-agent-core": "^1.4.0",
+    "@earendil-works/pi-ai": "^1.4.0",
+    "@earendil-works/pi-coding-agent": "^1.4.0",
+    "typescript": "^5.9.0"
+  }
+}
