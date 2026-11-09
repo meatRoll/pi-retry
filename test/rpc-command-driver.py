@@ -113,7 +113,7 @@ interrupted_count = payload_count()
 
 if scenario != "busy":
     time.sleep(1)
-    send({"id": "p3", "type": "prompt", "message": "/retry"})
+    send({"id": "p3", "type": "prompt", "message": "/retry force" if scenario == "regen" else "/retry"})
     second = wait_settled(180, "retried run")
     print(f"second settle: aborted={second.get('aborted')}")
 

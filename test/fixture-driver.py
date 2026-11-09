@@ -20,6 +20,9 @@ WORKDIR = pathlib.Path("/tmp/pi-retry-test")
 WORKDIR.mkdir(parents=True, exist_ok=True)
 FIXTURE_STOP = os.environ.get("PI_RETRY_FIXTURE", "aborted")
 BASELINE = os.environ.get("PI_RETRY_BASELINE") == "1"
+EXTRA_ARGS = os.environ.get("PI_RETRY_ARGS", "").strip()
+# A finished answer must not be re-sent without `force`: expect no provider request at all.
+EXPECT_NO_RUN = FIXTURE_STOP == "stop" and not BASELINE and EXTRA_ARGS == ""
 
 fixture = WORKDIR / f"fixture-{FIXTURE_STOP}.jsonl"
 subprocess.run(
@@ -77,15 +80,18 @@ def drain() -> None:
 
 threading.Thread(target=drain, daemon=True).start()
 
-prompt = "continue" if BASELINE else "/retry"
+prompt = "continue" if BASELINE else f"/retry {EXTRA_ARGS}".strip()
 assert proc.stdin is not None
 proc.stdin.write(json.dumps({"id": "p1", "type": "prompt", "message": prompt}) + "\n")
 proc.stdin.flush()
 
-if not settled.acquire(timeout=180):
-    print("TIMEOUT waiting for the run")
-    proc.kill()
-    sys.exit(1)
+if EXPECT_NO_RUN:
+    time.sleep(4)
+else:
+    if not settled.acquire(timeout=180):
+        print("TIMEOUT waiting for the run")
+        proc.kill()
+        sys.exit(1)
 
 time.sleep(1)
 proc.kill()
@@ -94,11 +100,21 @@ time.sleep(0.3)
 
 errors = [f"{e.get('event')}: {e.get('error')}" for e in events if e.get("type") == "extension_error"]
 
-print(f"=== {'baseline (typed \"continue\")' if BASELINE else '/retry'} on a {FIXTURE_STOP} transcript ===")
+label = 'baseline (typed "continue")' if BASELINE else f"/retry {EXTRA_ARGS}".strip()
+print(f"=== {label} on a {FIXTURE_STOP} transcript ===")
+notes = [e.get("message") for e in events if e.get("type") == "extension_ui_request" and e.get("method") == "notify"]
+print(" notifications:", notes or "(none)")
 if errors:
     print("errors:", errors)
 
 requests = [json.loads(line)["payload"] for line in PAYLOAD_LOG.read_text().splitlines()]
+
+if EXPECT_NO_RUN:
+    ok = not errors and not requests and any("nothing to re-send" in (n or "") for n in notes)
+    print(" provider requests:", len(requests), "(expected 0)")
+    print("RESULT:", "PASS" if ok else "FAIL")
+    sys.exit(0 if ok else 1)
+
 first = requests[0]
 messages = first.get("messages", [])
 flat = json.dumps(messages)
@@ -109,7 +125,7 @@ print(" contains the old answer (PARTIAL_MARKER):", "PARTIAL_MARKER" in flat)
 print(" contains the hidden trigger:", "pi-retry/trigger" in flat)
 print(" user messages:", sum(1 for role in roles if role == "user"))
 
-projection = json.loads(PROJECTION_LOG.read_text().splitlines()[-1])["messages"]
+projection = [json.loads(line) for line in PROJECTION_LOG.read_text().splitlines()][-1]["messages"]
 print(
     " projection after the run:",
     f"triggers={sum(1 for m in projection if (m.get('customType') or '') == 'pi-retry/trigger')}",

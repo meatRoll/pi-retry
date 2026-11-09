@@ -1,6 +1,6 @@
 {
   "name": "pi-retry",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "description": "Re-send an interrupted Pi request with /retry instead of typing 继续 (nothing is added to the request)",
   "type": "module",
   "license": "MIT",

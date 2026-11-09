@@ -93,6 +93,15 @@ function rewriteContext(messages: AgentMessage[], retrying: boolean): AgentMessa
 	return changed ? result : messages;
 }
 
+/**
+ * `completed` means the last turn is a finished answer: re-sending the same prompt would just
+ * append a second answer, so that needs an explicit opt-in (`force`).
+ */
+function tailState(messages: AgentMessage[]): "retryable" | "completed" {
+	const last = messages[messages.length - 1];
+	return isAssistant(last) && last.stopReason === "stop" ? "completed" : "retryable";
+}
+
 function stopReasonOf(messages: AgentMessage[]): string | undefined {
 	const last = messages[messages.length - 1];
 	return isAssistant(last) ? last.stopReason : undefined;
@@ -126,7 +135,10 @@ export async function retry(pi: ExtensionAPI, ctx: RetryContext, args: string): 
 	const words = args.trim().toLowerCase().split(/\s+/).filter(Boolean);
 
 	if (words.some((word) => word === "help" || word === "--help" || word === "-h")) {
-		ctx.ui.notify("pi-retry: /retry sends the last request again (ctrl+shift+r does the same)", "info");
+		ctx.ui.notify(
+			"pi-retry: /retry re-sends an interrupted request · /retry force regenerates a finished answer · ctrl+shift+r",
+			"info",
+		);
 		return;
 	}
 
@@ -142,6 +154,16 @@ export async function retry(pi: ExtensionAPI, ctx: RetryContext, args: string): 
 	}
 
 	const stopReason = stopReasonOf(messages);
+	const force = words.some((word) => word === "force" || word === "-f" || word === "--force");
+
+	// A finished answer is not an interrupted request; regenerating it is a separate intent.
+	if (tailState(messages) === "completed" && !force) {
+		ctx.ui.notify(
+			"pi-retry: the last turn finished — nothing to re-send (use `/retry force` to regenerate it)",
+			"warning",
+		);
+		return;
+	}
 
 	armed = true;
 	ctx.ui.setStatus("pi-retry", "↻ retrying…");
